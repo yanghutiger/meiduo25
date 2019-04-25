@@ -13,12 +13,11 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import url, include
+from django.conf.urls import url
 from django.contrib import admin
+from .views import ImageCodeView, SMSCodeView
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-    url(r"^", include("users.urls", namespace = "users") ),
-    url(r"^", include("contents.urls", namespace = "contents") ),
-    url(r"^", include("verifications.urls", namespace = "verifications") ),
+    url(r'^image_codes/(?P<uuid>[\w-]+)/$', ImageCodeView.as_view(), name="imagecode"),
+    url(r'^sms_codes/(?P<mobile>1[3-9]\d{9})/$', SMSCodeView.as_view(), name="smscode"),
 ]

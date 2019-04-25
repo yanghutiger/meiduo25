@@ -10,11 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
-import os
+import os, sys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+sys.path.insert(0, os.path.join(BASE_DIR, "apps"))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
@@ -37,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -101,10 +103,10 @@ WSGI_APPLICATION = 'meiduo_mall.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', # 数据库引擎
-        'HOST': '127.0.0.1', # 数据库主机
+        'HOST': '172.16.22.136', # 数据库主机
         'PORT': 3306, # 数据库端口
         'USER': 'root', # 数据库用户名
-        'PASSWORD': '10yangHU', # 数据库用户密码
+        'PASSWORD': 'mysql', # 数据库用户密码
         'NAME': 'meiduo' # 数据库名字
     },
 }
@@ -146,21 +148,36 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 CACHES = {
     "default": { # 默认
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/0",
+        "LOCATION": "redis://172.16.22.136/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     },
     "session": { # session
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
+        "LOCATION": "redis://172.16.22.136/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
+    },
+    "verify_code": { # 图片验证码
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": "redis://172.16.22.136/2",
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            }
+    },
+    "sms_flag": { # 图片验证码标志
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": "redis://172.16.22.136/7",
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            }
     },
 }
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
@@ -206,3 +223,8 @@ LOGGING = {
         },
     }
 }
+
+AUTH_USER_MODEL = "users.User"
+
+# 指定自定义的用户认证后端
+AUTHENTICATION_BACKENDS = ['users.utils.UsernameMobileAuthBackend']
