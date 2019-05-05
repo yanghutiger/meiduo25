@@ -2,19 +2,22 @@ from meiduo_mall.libs.captcha.captcha import captcha
 from django.views.generic import View
 from django_redis import get_redis_connection
 from django import http
-from meiduo_mall.utils.response_code import RETCODE
 import random
 import logging
+
+from meiduo_mall.utils.response_code import RETCODE
 from celery_tasks.sms.tasks import send_sms_code
+from .constants import IMAGE_CODE_REDIS_EXPIRES, SMS_CODE_REDIS_EXPIRES, SEND_SMS_TEMPLATE_ID
 # Create your views here.
 
 logger = logging.getLogger("django")
+
 
 class ImageCodeView(View):
     def get(self, request, uuid):
         name, text, image = captcha.generate_captcha()
         redis_coon = get_redis_connection("verify_code")
-        redis_coon.setex("img_%s" % uuid, 300, text)
+        redis_coon.setex("img_%s" % uuid, IMAGE_CODE_REDIS_EXPIRES, text)
         return http.HttpResponse(image, content_type="image/png")
 
 
@@ -53,8 +56,8 @@ class SMSCodeView(View):
             # # 设置短信验证码标志
             # redis_conn.setex("send_flag_%s" % mobile, 60, 1)
         pl = redis_conn.pipeline()
-        pl.setex("sms_%s" % mobile, 300, sms_code)
-        pl.setex("send_flag_%s" % mobile, 60, 1)
+        pl.setex("sms_%s" % mobile, SMS_CODE_REDIS_EXPIRES, sms_code)
+        pl.setex("send_flag_%s" % mobile, SMS_CODE_REDIS_EXPIRES // 5, SEND_SMS_TEMPLATE_ID)
         pl.execute()
 
         # 调用发送短信任务

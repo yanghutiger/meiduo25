@@ -57,7 +57,8 @@
         </div>
 
         <div @mouseenter="get_carts" class="guest_cart fr" v-cloak>
-            <a href="{{ url('carts:info') }}" class="cart_name fl">我的购物车</a>
+{#            <a href="{{ url('carts:info') }}" class="cart_name fl">我的购物车</a>#}
+            <a href="#" class="cart_name fl">我的购物车</a>
             <div class="goods_count fl" id="show_count">[[ cart_total_count ]]</div>
             <ul class="cart_goods_show">
                 <li v-for="sku in carts">
