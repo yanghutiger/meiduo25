@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
-from .views import RegisterView, UsernameCountView, MobileCountView, LoginView, LogoutView, UserInfoView, EmailView, VerifyEmailView, AddressView, CreateAddress, UpdateDestroyAddressView, DefaultAddressView, UpdateTitleAddressView, ChangePasswordView
+from .views import RegisterView, UsernameCountView, MobileCountView, LoginView, LogoutView, UserInfoView, EmailView, VerifyEmailView, AddressView, CreateAddress, UpdateDestroyAddressView, DefaultAddressView, UpdateTitleAddressView, ChangePasswordView, UserBrowseHistory
 
 urlpatterns = [
     url(r'^register/$', RegisterView.as_view(), name="register"),
@@ -44,5 +44,8 @@ urlpatterns = [
 
     # 修改密码
     url(r'^password/$', ChangePasswordView.as_view(), name="changepassword"),
+
+    # 修改密码
+    url(r'^browse_histories/$', UserBrowseHistory.as_view(), name="userbrowsehistory"),
 
 ]

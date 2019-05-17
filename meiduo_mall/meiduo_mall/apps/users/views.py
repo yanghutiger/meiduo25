@@ -12,6 +12,8 @@ from .models import User, Address
 from meiduo_mall.utils.response_code import RETCODE
 from celery_tasks.email.tasks import send_verify_email
 from .utils import generate_verify_email_url, check_token_to_user
+from goods.models import SKU
+from carts.utils import merge_cart_cookie_to_redis
 
 # Create your views here.
 logger = logging.getLogger("django")
@@ -115,6 +117,9 @@ class LoginView(View):
         # 首页用户名展示
         response = redirect(request.GET.get("next", "/"))
         response.set_cookie("username", user.username, max_age=3600 * 24 * 14)
+
+        # 合并购物车
+        merge_cart_cookie_to_redis(request, user, response)
 
         # 响应重定向
         return response
@@ -494,3 +499,57 @@ class ChangePasswordView(mixins.LoginRequiredMixin, View):
         response.delete_cookie("username") # 删除vue变量username
 
         return response
+
+
+class UserBrowseHistory(View):
+    """用户浏览记录"""
+    def post(self, request):
+        """保存用户浏览记录"""
+        user = request.user
+        if not user.is_authenticated:
+            return http.JsonResponse({"code": RETCODE.SESSIONERR, "errmsg": "用户未登录"})
+
+        json_dict = json.loads(request.body.decode())
+        sku_id = json_dict.get("sku_id")
+
+        try:
+            sku = SKU.objects.get(id=sku_id)
+        except SKU.DoesNotExist:
+            return http.HttpResponseForbidden("sku不存在")
+
+        redis_coon = get_redis_connection("history")
+        pl = redis_coon.pipeline()
+
+        key = "history_%s" % user.id
+
+        # 先去重
+        pl.lrem(key, 0, sku_id)
+
+        # 再存储到列表开头
+        pl.lpush(key, sku_id)
+
+        # 截取前五个
+        pl.ltrim(key, 0, 4)
+
+        pl.execute()
+
+        return http.JsonResponse({"code": RETCODE.OK, "errmsg": "OK"})
+
+    def get(self, request):
+        """获取用户浏览记录"""
+        user = request.user
+
+        redis_coon = get_redis_connection("history")
+        sku_id_list = redis_coon.lrange("history_%s" % user.id, 0, -1)
+
+        skus = []
+        for sku_id in sku_id_list:
+            sku = SKU.objects.get(id=sku_id)
+            skus.append({
+                "id": sku.id,
+                "default_image_url": sku.default_image.url,
+                "name": sku.name,
+                "price": sku.price
+            })
+
+        return http.JsonResponse({"code": RETCODE.OK, "errmsg": "OK", "skus": skus})

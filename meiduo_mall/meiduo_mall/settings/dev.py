@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'areas',
     'contents',
     'goods',
+    'haystack', # 全文检索
 ]
 
 MIDDLEWARE = [
@@ -170,18 +171,32 @@ CACHES = {
         }
     },
     "verify_code": { # 图片验证码
-            "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": "redis://172.16.22.136/2",
-            "OPTIONS": {
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            }
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://172.16.22.136/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
     },
     "sms_flag": { # 图片验证码标志
-            "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": "redis://172.16.22.136/7",
-            "OPTIONS": {
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            }
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://172.16.22.136/7",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+    "history": { # 用户浏览记录
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://172.16.22.136/3",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+    "carts": { # 用户购物车
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://172.16.22.136/4",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
     },
 }
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
@@ -255,3 +270,17 @@ EMAIL_VERIFY_URL = 'http://www.meiduo.site:8000/emails/verification/'
 # 修改Django的文件存储类
 DEFAULT_FILE_STORAGE = 'meiduo_mall.utils.fastdfs.fdfs_storage.FastDFSStorage'
 FDFS_BASE_URL = 'http://172.16.22.136:8888/'  # FastDFS中sotrage(nginx) ip和端口
+
+# Haystack
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
+        'URL': 'http://172.16.22.136:9200/', # Elasticsearch服务器ip地址，端口号固定为9200
+        'INDEX_NAME': 'meiduo_mall', # Elasticsearch建立的索引库的名称
+    },
+}
+
+# 当添加、修改、删除数据时，自动生成索引
+HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
+
+HAYSTACK_SEARCH_RESULTS_PER_PAGE = 5  # 每页显示五条数据

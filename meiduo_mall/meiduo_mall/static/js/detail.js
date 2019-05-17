@@ -92,12 +92,12 @@ var vm = new Vue({
         },
     	// 获取热销商品数据
         get_hot_goods(){
-        	var url = this.hots + '/hot/'+ this.category_id +'/';
+        	var url = this.host + '/hot/'+ this.category_id +'/';
             axios.get(url, {
                     responseType: 'json'
                 })
                 .then(response => {
-                    this.hots = response.data.hot_sku_list;
+                    this.hots = response.data.hot_skus;
                     for(var i=0; i<this.hots.length; i++){
                         this.hots[i].url = '/goods/' + this.hots[i].id + '.html';
                     }
@@ -129,7 +129,7 @@ var vm = new Vue({
 		// 记录商品详情的访问量
 		detail_visit(){
         	if (this.category_id) {
-        		var url = this.hots + '/detail/visit/' + this.category_id + '/';
+        		var url = this.host + '/detail/visit/' + this.category_id + '/';
 				axios.post(url, {}, {
 						headers: {
 							'X-CSRFToken':getCookie('csrftoken')
@@ -192,7 +192,7 @@ var vm = new Vue({
         // 获取商品评价信息
         get_goods_comment(){
             if (this.sku_id) {
-                var url = this.hots + '/comments/'+ this.sku_id +'/';
+                var url = this.host + '/comments/'+ this.sku_id +'/';
                 axios.get(url, {
                         responseType: 'json'
                     })

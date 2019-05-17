@@ -11,6 +11,7 @@ from meiduo_mall.utils.response_code import RETCODE
 from .models import OAuthQQUser
 from .utils import generate_openid_signature, check_openid_signature
 from users.models import User
+from carts.utils import merge_cart_cookie_to_redis
 
 # Create your views here.
 logger = logging.getLogger("django")
@@ -68,6 +69,9 @@ class OAuthUserView(View):
             response = redirect(state)
             response.set_cookie("username", user.username, max_age=3600 * 24 * 14)
 
+            # 登录成功那一刻合并购物车
+            merge_cart_cookie_to_redis(request, user, response)
+
             return response
 
     def post(self, request):
@@ -120,4 +124,8 @@ class OAuthUserView(View):
         login(request, user)
         response = redirect(request.GET.get("state", "/"))
         response.set_cookie("username", user.username, max_age=3600 * 24 * 14)
+
+        # 登录成功那一刻合并购物车
+        merge_cart_cookie_to_redis(request, user, response)
+
         return response
